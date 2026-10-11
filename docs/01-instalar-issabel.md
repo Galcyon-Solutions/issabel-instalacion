@@ -56,10 +56,14 @@ Qué hace, en orden:
 1. Comprueba que sea Rocky 8, que no haya Issabel instalado y que haya disco y memoria.
 2. Verifica el SHA-256 y **monta la ISO** (`mount -o loop,ro`) como repositorio `iso-issabel`.
 3. `dnf group install "Issabel with Asterisk 20"` + la lista de bloqueo comunitaria (RBL). **No instala los módulos licenciados**; si los quieres, `--con-licenciados`.
-4. Aplica los pasos de `%post` del kickstart: carpetas de Asterisk, permisos, SELinux deshabilitado, y `phpx-loader-select` (sin esto la página *Usuarios* puede fallar con "PHPX Loader is required").
+4. Aplica los pasos de `%post` del kickstart: carpetas de Asterisk, permisos, SELinux deshabilitado, **`firewalld` deshabilitado** (igual que el netinstall) y `phpx-loader-select` (sin esto la página *Usuarios* puede fallar con "PHPX Loader is required").
 5. Arranca MariaDB y Asterisk y lanza el asistente de contraseñas (`issabel-admin-passwords --init`): te pide las dos claves de la sección anterior.
 
 Si dnf se queja de `libcurl-minimal` o `coreutils-single`, el script **reintenta solo** con `--allowerasing`: algunas imágenes de VPS traen esas versiones mínimas, que chocan con las completas de la ISO.
+
+> **Por qué se deshabilita `firewalld`.** El grupo de paquetes de Issabel lo instala y lo deja activo con la zona `public`, que solo deja pasar SSH: la web daría *timeout* desde fuera aunque el firewall de tu proveedor esté abierto. El `netinstall` oficial lo deshabilita y deja el cortafuegos al módulo propio de Issabel (*Security > Firewall*); el script hace lo mismo para que los dos caminos den el mismo resultado.
+
+> **No instales paquetes sueltos antes del grupo.** En un Rocky recién creado, ejecuta primero este script y deja para después el idioma y las herramientas extra. Un `dnf install` previo desde los repositorios en línea puede subir `glibc` por encima de la versión que trae la ISO y el grupo falla con `cannot install both glibc-2.28-251.el8_10.40 from iso-issabel and ...el8_10.43 from @System`. `--allowerasing` no lo resuelve (sería un *downgrade*). Un `dnf upgrade` completo antes sí funcionó en la prueba.
 
 **Conserva el archivo ISO.** Montada de nuevo como repositorio te permite volver a la versión original de Asterisk (`dnf downgrade`) si una actualización sale mal.
 

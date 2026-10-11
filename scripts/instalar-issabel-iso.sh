@@ -81,6 +81,10 @@ echo " " >> /etc/asterisk/res_odbc_custom.conf
 chown -R asterisk:asterisk /var/www/html /etc/asterisk /var/lib/asterisk /var/log/asterisk
 chmod 755 /var/lib/asterisk/agi-bin/* 2>/dev/null
 sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config; setenforce 0 2>/dev/null
+# firewalld: el grupo de Issabel lo instala y arranca con la zona "public" (solo SSH), asi que la web (80/443),
+# SIP y el audio quedan cerrados desde fuera. El netinstall oficial lo deshabilita y deja el cortafuegos al
+# propio Issabel (menu Security > Firewall); hacemos lo mismo para que ambos caminos den el mismo resultado.
+systemctl disable --now firewalld 2>/dev/null || true
 # El %post del paquete phpx-loader corre con "|| :" y puede fallar en silencio: sin esto la pagina Usuarios no abre
 [ -x /usr/sbin/phpx-loader-select ] && /usr/sbin/phpx-loader-select --quiet || true
 systemctl daemon-reload
